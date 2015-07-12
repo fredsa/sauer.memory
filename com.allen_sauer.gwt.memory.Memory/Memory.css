@@ -1,0 +1,39 @@
+@CHARSET "UTF-8";
+
+BODY {
+  background-color: #FFEEDD;
+  text-align: center;
+}
+
+TABLE {
+  border-collapse: collapse;
+}
+
+TD {
+  padding: 0px;
+  margin: 0px;
+}
+
+.memory-GameBoard {
+  padding: 3px;
+}
+
+.memory-Card {
+  cursor: default;
+  padding: 5px;
+}
+
+.memory-Card IMG {
+  cursor: pointer;
+  border-top: 1px solid #776655;
+  border-right: 1px solid #BBAA99;
+  border-left: 1px solid #998877;
+  border-bottom: 1px solid #CCBBAA;
+}
+
+.memory-DialogBox {
+  border: 1px solid blue;
+  padding: 50px;
+  background-color: #ABCDEF;
+  cursor: pointer;
+}
