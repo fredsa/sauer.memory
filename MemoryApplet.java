@@ -30,7 +30,7 @@ import javax.swing.SwingConstants;
 public class MemoryApplet extends JApplet implements ActionListener, Runnable {
 
   private JPanel gamePanel, gameBoardPanel, gameStatsPanel, introPanel, youWinPanel;
-  private Vector allButtons=new Vector();
+  private Vector<MemoryButton> allButtons=new Vector<MemoryButton>();
   private JButton startButton;
   private Image noCardImage, cardImage, tinyCardImage;
   private JLabel noCardLabel;
@@ -38,32 +38,32 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
   private String imageBaseLocation;
   private String soundBaseLocation;
   private MemoryButton currentlyFlippedButton=null, recentlyPushedButton=null;
-  private Vector alrightVector=new Vector(), uhuhuhVector=new Vector();
-  private Vector welcomeVector=new Vector(), youWinVector=new Vector();
+  private Vector<MemoryAudioClip> alrightVector=new Vector<MemoryAudioClip>(), uhuhuhVector=new Vector<MemoryAudioClip>();
+  private Vector<MemoryAudioClip> welcomeVector=new Vector<MemoryAudioClip>(), youWinVector=new Vector<MemoryAudioClip>();
   private long endOfClipTime=0;
   private Object myActionSyncObject=new Object();
   private int totalImageCount, gameImageCount;
   private Font bigFont;
   private int totalPairCount, remainingPairCount;
   private static Random random=new Random();
-  
+
   public MemoryApplet() throws IOException {
     bigFont=new Font("SansSerif",Font.PLAIN,20);
     myProperties=new Properties();
     System.out.println("URL: " + MemoryApplet.class.getResource("Memory.properties"));
     myProperties.load(getClass().getResourceAsStream("Memory.properties"));
-    
+
     imageBaseLocation=myProperties.getProperty("images.location");
     cardImage=getToolkit().getImage(getClass().getResource(imageBaseLocation+myProperties.getProperty("images.card_image")));
     noCardImage=getToolkit().getImage(getClass().getResource(imageBaseLocation+myProperties.getProperty("images.no_card_image")));
     noCardLabel=new JLabel(new ImageIcon(noCardImage));
-    
+
     ImageFilter filter=new ReplicateScaleFilter(20,20);
     ImageProducer producer=new FilteredImageSource(cardImage.getSource(),filter);
     tinyCardImage=createImage(producer);
-    
+
     MemoryAudioClip.initialize(myProperties,"sounds.location");
-    
+
     totalPairCount=0;
     for(Enumeration enumeration=myProperties.propertyNames(); enumeration.hasMoreElements(); ) {
       String name=(String)enumeration.nextElement();
@@ -77,23 +77,23 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
         welcomeVector.addElement(new MemoryAudioClip(name));
       } else if (name.startsWith("images.pair.")) {
         totalPairCount++;
-        
+
         Image image1, image2, imagePaired;
         MemoryAudioClip clip1=null,clip2=null;
-        
+
         String imageValue=myProperties.getProperty(name);
         int pipePos1=imageValue.indexOf('|');
         int pipePos2=imageValue.indexOf('|',pipePos1+1);
         image1=getToolkit().getImage(getClass().getResource(imageBaseLocation+imageValue.substring(0,pipePos1)));
         image2=getToolkit().getImage(getClass().getResource(imageBaseLocation+imageValue.substring(pipePos1+1,pipePos2)));
         imagePaired=getToolkit().getImage(getClass().getResource(imageBaseLocation+imageValue.substring(pipePos2+1)));
-        
+
         String soundValue=myProperties.getProperty("sounds.pair."+name.substring(12));
         if (soundValue!=null) {
           clip1=new MemoryAudioClip(soundValue,MemoryAudioClip.LEFT_OF_PIPE);
           clip2=new MemoryAudioClip(soundValue,MemoryAudioClip.RIGHT_OF_PIPE);
         }
-        
+
         MemoryButton button1,button2;
         button1=new MemoryButton(noCardImage, cardImage,image1,clip1);
         button2=new MemoryButton(noCardImage, cardImage,image2,clip2);
@@ -101,17 +101,17 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
         button2.setMatchingButton(button1);
         button1.setPairedImage(imagePaired);
         button2.setPairedImage(imagePaired);
-        
+
         allButtons.addElement(button1);
         allButtons.addElement(button2);
       }
     }
     totalImageCount=totalPairCount*2;
-    
+
     initIntroPanel();
     initYouWinPanel();
   }
-  
+
   public void startGame(int imageCount) {
     gameImageCount=imageCount;
     Vector buttons=(Vector)allButtons.clone();
@@ -130,7 +130,7 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
     //pack();
     validate();
   }
-  
+
   public void init() {
     WindowListener l=new WindowAdapter() {
       public void windowClosing(WindowEvent ev) {
@@ -138,16 +138,16 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
       }
     };
     //addWindowListener(l);
-    
+
     setContentPane(introPanel);
     //pack();
     new Thread(this).start();
-    
+
     setVisible(true);
-    
+
     MemoryAudioClip.playAndWait(welcomeVector);
   }
-  
+
   private GridLayout getGridLayout(int imageCount) {
     switch(imageCount) {
       case 4: return new GridLayout(2,2);
@@ -158,21 +158,21 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
       default: return null;
     }
   }
-  
+
   private void initGamePanel(Vector buttons) {
     gamePanel=new JPanel();
     gameBoardPanel=new JPanel();
     gameStatsPanel=new JPanel();
     gameStatsPanel.setLayout(new GridLayout(0,2,5,5));
-    
+
     gameBoardPanel.setLayout(getGridLayout(buttons.size()));
     remainingPairCount=buttons.size()/2;
-    
+
     //add some empty images to space it out
     for(int i=0; i<remainingPairCount; i++) {
       gameStatsPanel.add(noCardLabel);
     }
-    
+
     Vector buttonsClone=(Vector)buttons.clone();
     while (!buttonsClone.isEmpty()) {
       MemoryButton button=(MemoryButton)buttonsClone.get(random.nextInt(buttonsClone.size()));
@@ -180,7 +180,7 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
       button.addActionListener(this);
       gameBoardPanel.add(button);
     }
-    
+
     GridBagLayout gridbag=new GridBagLayout();
     gamePanel.setLayout(gridbag);
     GridBagConstraints c=new GridBagConstraints();
@@ -191,44 +191,44 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
     c.weighty=1.0;
     gridbag.setConstraints(gameBoardPanel,c);
     gridbag.setConstraints(gameStatsPanel,c);
-    
+
     gamePanel.add(gameBoardPanel);
     gamePanel.add(gameStatsPanel);
   }
-  
+
   private void initIntroPanel() {
     introPanel=new JPanel();
     JPanel scenarioPanel=new JPanel();
     JPanel welcomeImagePanel=new JPanel();
-    
+
     welcomeImagePanel.setLayout(new BoxLayout(welcomeImagePanel,BoxLayout.Y_AXIS));
-    
+
     introPanel.setLayout(new BoxLayout(introPanel,BoxLayout.X_AXIS));
     introPanel.add(scenarioPanel);
     introPanel.add(welcomeImagePanel);
-    
+
     GridBagLayout gridbag=new GridBagLayout();
     GridBagConstraints c=new GridBagConstraints();
     scenarioPanel.setLayout(gridbag);
-    
+
     JLabel welcomeImageLabel=new JLabel(new ImageIcon(getToolkit().getImage(getClass().getResource(imageBaseLocation+myProperties.getProperty("images.welcome")))));
     JLabel welcomeTextLabel=new JLabel(myProperties.getProperty("message.welcome"),SwingConstants.CENTER);
     welcomeTextLabel.setFont(bigFont);
-    
+
     c.gridwidth=1;
     c.gridheight=1;
-    
+
     c.weightx=1.0;
     c.weighty=1.0;
-    
+
     welcomeImagePanel.add(welcomeImageLabel);
     welcomeImagePanel.add(welcomeTextLabel);
-    
+
     int scenarios=0;
     for(int i=2; i<=totalImageCount; i+=2) {
       if (getGridLayout(i)!=null) scenarios++;
     }
-    
+
     int j=1, horizontalScenarios=(int)Math.ceil(Math.sqrt(scenarios));
     for(int i=2; i<=totalImageCount; i+=2) {
       if (j==horizontalScenarios) {
@@ -246,35 +246,35 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
         scenarioPanel.add(samplePanel);
       }
     }
-    
+
   }
-  
+
   private void initYouWinPanel() {
     youWinPanel=new JPanel();
-    
+
     youWinPanel.setBorder(BorderFactory.createEmptyBorder(3,1,3,1));
     youWinPanel.setLayout(new GridLayout(2,2));
-    
+
     JLabel youWinImageLabel=new JLabel(new ImageIcon(getToolkit().getImage(getClass().getResource(imageBaseLocation+myProperties.getProperty("images.you_win")))));
     JLabel youWinTextLabel=new JLabel(myProperties.getProperty("message.you_win"),SwingConstants.CENTER);
     youWinTextLabel.setFont(bigFont);
-    
+
     startButton=new JButton("Play Again");
     startButton.addActionListener(this);
-    
+
     JButton quitButton=new JButton("QUIT");
     quitButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ev) {
         System.exit(0);
       }
     });
-    
+
     youWinPanel.add(youWinImageLabel);
     youWinPanel.add(youWinTextLabel);
     youWinPanel.add(quitButton);
     youWinPanel.add(startButton);
   }
-  
+
   public void actionPerformed(ActionEvent ev) {
     Object source=ev.getSource();
     if (source==startButton) {
@@ -291,11 +291,11 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
       startGame(samplePanel.getImageCount());
     }
   }
-  
+
   public void run() {
     while(true) {
       recentlyPushedButton=null;
-      
+
       //wait for any button push activity
       synchronized(myActionSyncObject) {
         try { myActionSyncObject.wait(); } catch(Exception ex) {}
@@ -305,10 +305,10 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
         recentlyPushedButton=null;
         continue;
       }
-      
+
       MemoryButton button=recentlyPushedButton;
       recentlyPushedButton=null;
-      
+
       if (currentlyFlippedButton==null) {
         currentlyFlippedButton=button;
         button.flipTo(MemoryButton.FACE_ICON);
@@ -344,5 +344,5 @@ public class MemoryApplet extends JApplet implements ActionListener, Runnable {
       }
     }
   }
-  
+
 }
