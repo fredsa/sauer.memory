@@ -1,0 +1,13 @@
+application: sauer-memory
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /
+  static_files: Memory.html
+  upload: Memory.html
+
+- url: /(.*)
+  static_files: \1
+  upload: .*
